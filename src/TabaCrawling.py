@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 import abc
 import pandas as pd
 import os
+import re
+import time
 
 def Err(TryFunction):
     """
@@ -85,22 +87,22 @@ class TabeURL():
     
 class TabelogInfo(ExcelConvertible):
     
-    def __init__(self, name, rating, reviews, info):
+    def __init__(self, name, rating, reviews, detail):
 
         """
         name = 가게 이름 (str)
         rating = 별점 (float)
         reviews = 평가 개수 (int)
-        info = 가게 정보 (str)
+        detail = 가게 정보 (str)
         """
 
         self.name = name
         self.rating = rating
         self.reviews = reviews
-        self.info = info
+        self.detail = detail
 
     def column_names(self):
-        return ['name', 'rating', 'reviews', 'info']
+        return ['name', 'rating', 'reviews', 'detail']
     
 def collect_info(area, page):
 
@@ -112,26 +114,24 @@ def collect_info(area, page):
     
     # start parsing
     soup = BeautifulSoup(body, features="lxml")
-    shops = soup.select('#container > div.rstlist-contents.clearfix > div.flexible-rstlst > div')
+    shops = soup.select('#container > div.rstlist-contents.clearfix > div.flexible-rstlst > div > div.js-rstlist-info.rstlist-info')
 
     info_list = []
     for shop in shops:
-        name_soup = shop.select('div.js-rstlist-info.rstlist-info > div:nth-child(1) > div.list-rst__wrap.js-open-new-window > div > div.list-rst__contents > div > div.list-rst__rst-name-wrap > h3 > a')
+        name_soup = shop.select('div.list-rst__contents > div > div.list-rst__rst-name-wrap > h3 > a')
         if not name_soup:
             continue
 
-        rate_soup = shop.select('div.js-rstlist-info.rstlist-info > div:nth-child(1) > div.list-rst__wrap.js-open-new-window > div > div.list-rst__contents > div > div.list-rst__rate > p.c-rating.c-rating--xxl.c-rating--val30.list-rst__rating-total.cpy-total-score')[0]
+        rate_soup = shop.select('div.list-rst__contents > div > div.list-rst__rate')[0]
 
         rating_soup = rate_soup.find_all('p', class_=re.compile("^c-rating"))
         review_soup = rate_soup.select('p.list-rst__rvw-count > a')
-        price_night_soup = shop.select('div.list-rst__body > div.list-rst__contents > div.list-rst__rst-data > ul.list-rst__budget > li:nth-child(1) > span.c-rating__val.list-rst__budget-val.cpy-dinner-budget-val')
-        price_noon_soup = shop.select('div.list-rst__body > div.list-rst__contents > div.list-rst__rst-data > ul.list-rst__budget > li:nth-child(2) > span.c-rating__val.list-rst__budget-val.cpy-lunch-budget-val')
+        detail_soup = shop.select('div.list-rst__contents > div > div.list-rst__rst-name-wrap > div')
 
         name = name_soup[0].text
         rating = rating_soup[0].text if rating_soup else '-1'
         review = review_soup[0].text if review_soup else '0件'
-        price_night = price_night_soup[0].text if price_night_soup else '-'
-        price_noon = price_noon_soup[0].text if price_noon_soup else '-'
+        detail = detail_soup[0].text
 
         def reformat_str(s):
             return str(s).lstrip().rstrip()
@@ -147,31 +147,21 @@ def collect_info(area, page):
         except:
             review = 0
 
-        if price_night == '-':
-            price_night = -1
-        else:
-            price_night = reformat_str(price_night)
-            price_night = price_night.split(sep='～')
-            price_night = price_night[-1].lstrip('￥')
-            price_night = price_night.replace(',', '')
-            try:
-                price_night = int(price_night)
-            except:
-                price_night = -1
+        detail = reformat_str(detail)
 
-        if price_noon == '-':
-            price_noon = -1
-        else:
-            price_noon = reformat_str(price_noon)
-            price_noon = price_noon.split(sep='～')
-            price_noon = price_noon[-1].lstrip('￥')
-            price_noon = price_noon.replace(',', '')
-            try:
-                price_noon = int(price_noon)
-            except:
-                price_noon = -1
-
-        info = TabelogInfo(name=name, rating=rating, reviews=review, price_night=price_night, price_noon=price_noon)
+        info = TabelogInfo(name=name, rating=rating, reviews=review, detail=detail)
         info_list.append(info)
 
     return True, info_list
+
+restaurants = []
+Areas = ['A1301', 'A1302', 'A1303', 'A1304', 'A1305', 'A1306', 'A1307', 'A1308', 'A1309', 'A1310'
+         'A1311', 'A1312', 'A1313', 'A1314', 'A1315', 'A1316', 'A1317', 'A1318', 'A1319', 'A1320'
+         'A1321', 'A1322', 'A1323', 'A1324', 'A1325', 'A1326', 'A1327', 'A1328', 'A1329', 'A1330'
+         'A1331']
+
+for area in range(1301, ):
+    for page in range(1, 30):
+        _, infos = collect_info(area, page)
+        restaurants += infos
+        time.sleep(0.5)
