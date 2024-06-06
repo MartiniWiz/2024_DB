@@ -6,6 +6,13 @@
     <title>{{ station }}의 식당들</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/index.css' %}">
+    <script>
+        function searchRestaurant(restaurantName) {
+            const query = `site:tabelog.com ${restaurantName}`;
+            const bingSearchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+            window.open(bingSearchUrl, '_blank');
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -47,39 +54,39 @@
             <tbody>
                 {% for restaurant in restaurants %}
                 <tr>
-                    <td>{{ restaurant.name }}</td>
+                    <td><a href="javascript:void(0);" onclick="searchRestaurant('{{ restaurant.name }}')">{{ restaurant.name }}</a></td>
                     <td>{{ restaurant.address }}</td>
                     <td>{{ restaurant.menu }}</td>
                     <td>{{ restaurant.final_score.first.new_score|default:"N/A" }}</td>
                     <td>
                         {% if user.is_authenticated %}
                         <form method="post" action="{% if restaurant in user.favorites_set.all %}{% url 'remove_favorite' restaurant.id %}{% else %}{% url 'add_favorite' restaurant.id %}{% endif %}">
-    {% csrf_token %}
-    <input type="checkbox" name="favorite" value="{{ restaurant.id }}" {% if restaurant in user.favorites_set.all %}checked{% endif %} onchange="this.form.submit()">
-</form>
-{% endif %}
-</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-<div class="pagination">
-    <span class="step-links">
-        {% if restaurants.has_previous %}
-            <a href="?page=1&sort={{ sort }}">처음</a>
-            <a href="?page={{ restaurants.previous_page_number }}&sort={{ sort }}">이전</a>
-        {% endif %}
+                            {% csrf_token %}
+                            <input type="checkbox" name="favorite" value="{{ restaurant.id }}" {% if restaurant in user.favorites_set.all %}checked{% endif %} onchange="this.form.submit()">
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="pagination">
+            <span class="step-links">
+                {% if restaurants.has_previous %}
+                    <a href="?page=1&sort={{ sort }}">처음</a>
+                    <a href="?page={{ restaurants.previous_page_number }}&sort={{ sort }}">이전</a>
+                {% endif %}
 
-        <span class="current">
-            Page {{ restaurants.number }} of {{ restaurants.paginator.num_pages }}.
-        </span>
+                <span class="current">
+                    Page {{ restaurants.number }} of {{ restaurants.paginator.num_pages }}.
+                </span>
 
-        {% if restaurants.has_next %}
-            <a href="?page={{ restaurants.next_page_number }}&sort={{ sort }}">다음</a>
-            <a href="?page={{ restaurants.paginator.num_pages }}&sort={{ sort }}">마지막</a>
-        {% endif %}
-    </span>
-</div>
-</div>
+                {% if restaurants.has_next %}
+                    <a href="?page={{ restaurants.next_page_number }}&sort={{ sort }}">다음</a>
+                    <a href="?page={{ restaurants.paginator.num_pages }}&sort={{ sort }}">마지막</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
 </body>
 </html>
