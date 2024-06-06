@@ -102,7 +102,7 @@ def populate_db():
             weighted_google_score = google_score * google_weight * google_reviews_weight
 
             combined_score = (weighted_tabelog_score + weighted_google_score) / 2
-            final_score = min(combined_score, 5.0)  # 최대 5점으로 제한
+            final_score = round(min(combined_score, 5.0), 2)  # 최대 5점으로 제한
 
             FinalScore.objects.create(
                 tabelog=tabelog,
