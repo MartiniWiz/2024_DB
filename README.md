@@ -12,6 +12,7 @@ Team 11
 ## Rating System
 
 ![image](https://github.com/MartiniWiz/2024_DB/assets/52143481/f3a1d2ac-720a-4885-a6c7-988fc51d818d)
+
 ![image](https://github.com/MartiniWiz/2024_DB/assets/52143481/24150375-5ace-4752-8280-65afa8422eda)
 ![image](https://github.com/MartiniWiz/2024_DB/assets/52143481/bc2a6870-4059-4a2f-8b89-e92ce84535e2)
 
