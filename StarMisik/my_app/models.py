@@ -38,8 +38,10 @@ class FinalScore(models.Model):
 
 class User(models.Model):
     id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=100, unique=True)
     age = models.IntegerField()
     sex = models.CharField(max_length=10)
+    password = models.CharField(max_length=128)
 
     def __str__(self):
         return str(self.id)
