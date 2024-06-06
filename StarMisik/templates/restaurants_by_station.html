@@ -34,34 +34,54 @@
                 <option value="new_score_desc" {% if sort == 'new_score_desc' %}selected{% endif %}>최종 별점 내림차순</option>
             </select>
         </form>
-        <ul>
-            {% for restaurant in restaurants %}
-                <li>
-                    {{ restaurant.name }} - {{ restaurant.address }} - 최종 별점: {{ restaurant.finalscore.new_score }}
-                    <br>Tabelog 별점: {{ restaurant.score }} - Google 별점: {{ restaurant.google.google_score }}
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'add_favorite' restaurant.id %}">즐겨찾기 추가</a>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-        <div class="pagination">
-            <span class="step-links">
-                {% if restaurants.has_previous %}
-                    <a href="?page=1&sort={{ sort }}">처음</a>
-                    <a href="?page={{ restaurants.previous_page_number }}&sort={{ sort }}">이전</a>
-                {% endif %}
+        <table>
+            <thead>
+                <tr>
+                    <th>가게 이름</th>
+                    <th>주소</th>
+                    <th>최종 별점</th>
+                    <th>Tabelog 별점</th>
+                    <th>Google 별점</th>
+                    <th>즐겨찾기</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for restaurant in restaurants %}
+                <tr>
+                    <td>{{ restaurant.name }}</td>
+                    <td>{{ restaurant.address }}</td>
+                    <td>{{ restaurant.final_score.first.new_score|default:"N/A" }}</td>
+                    <td>{{ restaurant.score|default:"N/A" }}</td>
+                    <td>{{ restaurant.google.google_score|default:"N/A" }}</td>
+                    <td>
+                        {% if user.is_authenticated %}
+                        <form method="post" action="{% if restaurant in user.favorites_set.all %}{% url 'remove_favorite' restaurant.id %}{% else %}{% url 'add_favorite' restaurant.id %}{% endif %}">
+    {% csrf_token %}
+    <input type="checkbox" name="favorite" value="{{ restaurant.id }}" {% if restaurant in user.favorites_set.all %}checked{% endif %} onchange="this.form.submit()">
+</form>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<div class="pagination">
+    <span class="step-links">
+        {% if restaurants.has_previous %}
+            <a href="?page=1&sort={{ sort }}">처음</a>
+            <a href="?page={{ restaurants.previous_page_number }}&sort={{ sort }}">이전</a>
+        {% endif %}
 
-                <span class="current">
-                    Page {{ restaurants.number }} of {{ restaurants.paginator.num_pages }}.
-                </span>
+        <span class="current">
+            Page {{ restaurants.number }} of {{ restaurants.paginator.num_pages }}.
+        </span>
 
-                {% if restaurants.has_next %}
-                    <a href="?page={{ restaurants.next_page_number }}&sort={{ sort }}">다음</a>
-                    <a href="?page={{ restaurants.paginator.num_pages }}&sort={{ sort }}">마지막</a>
-                {% endif %}
-            </span>
-        </div>
-    </div>
+        {% if restaurants.has_next %}
+            <a href="?page={{ restaurants.next_page_number }}&sort={{ sort }}">다음</a>
+            <a href="?page={{ restaurants.paginator.num_pages }}&sort={{ sort }}">마지막</a>
+        {% endif %}
+    </span>
+</div>
+</div>
 </body>
 </html>

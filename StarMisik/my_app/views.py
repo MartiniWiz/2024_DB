@@ -51,12 +51,12 @@ def search(request):
     return render(request, 'search.html', {'stations': stations})
 
 def restaurants_by_station(request, station):
-    restaurants = Tabelog.objects.filter(station__station=station)
+    restaurants = Tabelog.objects.filter(station__station=station).select_related('google').prefetch_related('final_score')
     sort = request.GET.get('sort', 'new_score')
     if sort == 'new_score_asc':
-        restaurants = restaurants.order_by('finalscore__new_score')
+        restaurants = restaurants.order_by('final_score__new_score')
     elif sort == 'new_score_desc':
-        restaurants = restaurants.order_by('-finalscore__new_score')
+        restaurants = restaurants.order_by('-final_score__new_score')
     paginator = Paginator(restaurants, 20)
     page = request.GET.get('page')
     restaurants = paginator.get_page(page)
@@ -65,5 +65,13 @@ def restaurants_by_station(request, station):
 @login_required
 def add_favorite(request, tabelog_id):
     tabelog = Tabelog.objects.get(id=tabelog_id)
-    Favorites.objects.create(user=request.user, address=tabelog)
-    return redirect('mypage')
+    Favorites.objects.create(user=request.user, tabelog=tabelog)
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+@login_required
+def remove_favorite(request, tabelog_id):
+    tabelog = Tabelog.objects.get(id=tabelog_id)
+    favorite = Favorites.objects.filter(user=request.user, tabelog=tabelog)
+    if favorite.exists():
+        favorite.delete()
+    return redirect(request.META.get('HTTP_REFERER', 'mypage'))
